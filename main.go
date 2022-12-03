@@ -2,16 +2,19 @@ package main
 
 import (
 	"flag"
+	"github.com/gin-gonic/gin"
 	"github.com/mkorman9/tiny"
+	"github.com/mkorman9/tiny/tinyhttp"
 	"github.com/mkorman9/tiny/tinysqlite"
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
+	"net/http"
 	"os"
 )
 
 type Client struct {
-	ID       int    `gorm:"column:id; type:int; primaryKey; autoIncrement"`
-	FullName string `gorm:"column:full_name; type:text; not null"`
+	ID       int    `json:"id" gorm:"column:id; type:int; primaryKey; autoIncrement"`
+	FullName string `json:"fullName" gorm:"column:full_name; type:text; not null"`
 }
 
 func (Client) TableName() string {
@@ -20,7 +23,10 @@ func (Client) TableName() string {
 
 func main() {
 	var dsn string
+	var address string
+
 	flag.StringVar(&dsn, "dsn", ":memory:", "database DSN")
+	flag.StringVar(&address, "address", "0.0.0.0:8080", "HTTP server address")
 	flag.Parse()
 
 	_ = tiny.LoadConfig()
@@ -36,8 +42,18 @@ func main() {
 	}()
 
 	migrate(db.DB)
-	insert(db.DB)
-	query(db.DB)
+
+	server := tinyhttp.NewServer(address)
+
+	server.GET("/", func(c *gin.Context) {
+		c.JSON(http.StatusOK, query(db.DB))
+	})
+
+	server.POST("/", func(c *gin.Context) {
+		c.JSON(http.StatusOK, insert(db.DB))
+	})
+
+	tiny.StartAndBlock(server)
 }
 
 func migrate(db *gorm.DB) {
@@ -50,26 +66,23 @@ func migrate(db *gorm.DB) {
 	}
 }
 
-func insert(db *gorm.DB) {
+func insert(db *gorm.DB) *Client {
 	clientToInsert := &Client{
 		FullName: "John Doe",
 	}
 	if tx := db.Create(clientToInsert); tx.Error != nil {
 		log.Error().Err(tx.Error).Msg("failed to insert record")
-		os.Exit(1)
+		return nil
 	}
 
-	log.Info().Msgf("inserted: id = %d, full_name = %s", clientToInsert.ID, clientToInsert.FullName)
+	return clientToInsert
 }
 
-func query(db *gorm.DB) {
+func query(db *gorm.DB) []*Client {
 	var clients []*Client
 	if tx := db.Find(&clients); tx.Error != nil {
 		log.Error().Err(tx.Error).Msg("failed to query records")
-		os.Exit(1)
 	}
 
-	for _, c := range clients {
-		log.Info().Msgf("returned: id = %d, full_name = %s", c.ID, c.FullName)
-	}
+	return clients
 }
