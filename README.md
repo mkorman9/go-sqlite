@@ -1,3 +1,4 @@
 ### Database replication
 
-See https://github.com/mkorman9/sqlite-replicator
+See [Litestream Install](https://litestream.io/install/debian/) and 
+[Litestream Getting Started](https://litestream.io/getting-started/).
