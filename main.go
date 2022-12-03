@@ -50,7 +50,12 @@ func main() {
 	})
 
 	server.POST("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, insert(db.DB))
+		fullName := c.Query("fullName")
+		if fullName == "" {
+			fullName = "John Doe"
+		}
+
+		c.JSON(http.StatusOK, insert(db.DB, fullName))
 	})
 
 	tiny.StartAndBlock(server)
@@ -66,9 +71,9 @@ func migrate(db *gorm.DB) {
 	}
 }
 
-func insert(db *gorm.DB) *Client {
+func insert(db *gorm.DB, fullName string) *Client {
 	clientToInsert := &Client{
-		FullName: "John Doe",
+		FullName: fullName,
 	}
 	if tx := db.Create(clientToInsert); tx.Error != nil {
 		log.Error().Err(tx.Error).Msg("failed to insert record")
