@@ -112,23 +112,31 @@ func insertClient(db *gorm.DB, fullName string, age int, credentials *BasicCrede
 		FullName: fullName,
 		Age:      age,
 	}
-	if tx := db.Create(clientToInsert); tx.Error != nil {
-		log.Error().Err(tx.Error).Msg("failed to insert client")
+
+	err := db.Transaction(func(tx *gorm.DB) error {
+		if result := tx.Create(clientToInsert); result.Error != nil {
+			log.Error().Err(result.Error).Msg("failed to insert client")
+			return result.Error
+		}
+
+		if credentials != nil {
+			credentialsToInsert := &Credentials{
+				ClientID: clientToInsert.ID,
+				Email:    credentials.Email,
+				Password: credentials.Password,
+			}
+			if result := tx.Create(credentialsToInsert); result.Error != nil {
+				log.Error().Err(result.Error).Msg("failed to insert credentials")
+				return result.Error
+			}
+
+			clientToInsert.Credentials = credentialsToInsert
+		}
+
 		return nil
-	}
-
-	if credentials != nil {
-		credentialsToInsert := &Credentials{
-			ClientID: clientToInsert.ID,
-			Email:    credentials.Email,
-			Password: credentials.Password,
-		}
-		if tx := db.Create(credentialsToInsert); tx.Error != nil {
-			log.Error().Err(tx.Error).Msg("failed to insert credentials")
-			return nil
-		}
-
-		clientToInsert.Credentials = credentialsToInsert
+	})
+	if err != nil {
+		return nil
 	}
 
 	return clientToInsert
