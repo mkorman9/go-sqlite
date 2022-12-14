@@ -69,6 +69,10 @@ func main() {
 		c.JSON(http.StatusOK, query(db.DB))
 	})
 
+	server.GET("/age/avg", func(c *gin.Context) {
+		c.JSON(http.StatusOK, queryAverageAge(db.DB))
+	})
+
 	server.POST("/", func(c *gin.Context) {
 		fullName := c.Query("fullName")
 		if fullName == "" {
@@ -137,4 +141,14 @@ func query(db *gorm.DB) []*Client {
 	}
 
 	return clients
+}
+
+func queryAverageAge(db *gorm.DB) float64 {
+	var avgAge float64
+	if tx := db.Raw("SELECT AVG(age) FROM clients").Scan(&avgAge); tx.Error != nil {
+		log.Error().Err(tx.Error).Msg("failed to query average age")
+		return 0
+	}
+
+	return avgAge
 }
