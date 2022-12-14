@@ -10,15 +10,34 @@ import (
 	"gorm.io/gorm"
 	"net/http"
 	"os"
+	"strconv"
 )
 
 type Client struct {
-	ID       int    `json:"id" gorm:"column:id; type:int; primaryKey; autoIncrement"`
-	FullName string `json:"fullName" gorm:"column:full_name; type:text; not null"`
+	ID          int          `json:"id" gorm:"column:id; type:int; primaryKey; autoIncrement"`
+	FullName    string       `json:"fullName" gorm:"column:full_name; type:text; not null"`
+	Age         int          `json:"age" gorm:"column:age; type: int; not null"`
+	Credentials *Credentials `json:"credentials,omitempty" gorm:"foreignKey:ClientID; constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
 }
 
 func (Client) TableName() string {
 	return "clients"
+}
+
+type Credentials struct {
+	ID       int    `json:"-" gorm:"column:id; type:int; primaryKey; autoIncrement"`
+	ClientID int    `json:"-" gorm:"column:client_id; type:int; unique"`
+	Email    string `json:"email" gorm:"column:email; type:text; not null"`
+	Password string `json:"password" gorm:"column:password; type:text; not null"`
+}
+
+func (Credentials) TableName() string {
+	return "client_credentials"
+}
+
+type BasicCredentials struct {
+	Email    string
+	Password string
 }
 
 func main() {
@@ -42,6 +61,7 @@ func main() {
 	}()
 
 	migrate(db.DB)
+	insertTestData(db.DB)
 
 	server := tinyhttp.NewServer(address)
 
@@ -55,7 +75,12 @@ func main() {
 			fullName = "John Doe"
 		}
 
-		c.JSON(http.StatusOK, insert(db.DB, fullName))
+		age, err := strconv.Atoi(c.Query("age"))
+		if err != nil || age < 18 {
+			age = 21
+		}
+
+		c.JSON(http.StatusOK, insertClient(db.DB, fullName, age, nil))
 	})
 
 	tiny.StartAndBlock(server)
@@ -64,6 +89,7 @@ func main() {
 func migrate(db *gorm.DB) {
 	err := db.AutoMigrate(
 		&Client{},
+		&Credentials{},
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to migrate schema")
@@ -71,13 +97,34 @@ func migrate(db *gorm.DB) {
 	}
 }
 
-func insert(db *gorm.DB, fullName string) *Client {
+func insertTestData(db *gorm.DB) {
+	insertClient(db, "John Doe", 31, &BasicCredentials{Email: "john.doe@example.com", Password: "12345"})
+	insertClient(db, "Amy Kruger", 25, nil)
+	insertClient(db, "Donald Trump", 60, &BasicCredentials{Email: "donald.trump@example.com", Password: "china"})
+}
+
+func insertClient(db *gorm.DB, fullName string, age int, credentials *BasicCredentials) *Client {
 	clientToInsert := &Client{
 		FullName: fullName,
+		Age:      age,
 	}
 	if tx := db.Create(clientToInsert); tx.Error != nil {
-		log.Error().Err(tx.Error).Msg("failed to insert record")
+		log.Error().Err(tx.Error).Msg("failed to insert client")
 		return nil
+	}
+
+	if credentials != nil {
+		credentialsToInsert := &Credentials{
+			ClientID: clientToInsert.ID,
+			Email:    credentials.Email,
+			Password: credentials.Password,
+		}
+		if tx := db.Create(credentialsToInsert); tx.Error != nil {
+			log.Error().Err(tx.Error).Msg("failed to insert credentials")
+			return nil
+		}
+
+		clientToInsert.Credentials = credentialsToInsert
 	}
 
 	return clientToInsert
@@ -85,7 +132,7 @@ func insert(db *gorm.DB, fullName string) *Client {
 
 func query(db *gorm.DB) []*Client {
 	var clients []*Client
-	if tx := db.Find(&clients); tx.Error != nil {
+	if tx := db.Joins("Credentials").Find(&clients); tx.Error != nil {
 		log.Error().Err(tx.Error).Msg("failed to query records")
 	}
 
