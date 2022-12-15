@@ -16,7 +16,7 @@ import (
 type Client struct {
 	ID          int          `json:"id" gorm:"column:id; type:int; primaryKey; autoIncrement"`
 	FullName    string       `json:"fullName" gorm:"column:full_name; type:text; not null"`
-	Age         int          `json:"age" gorm:"column:age; type: int; not null"`
+	Age         int          `json:"age" gorm:"column:age; type:int; not null"`
 	Credentials *Credentials `json:"credentials,omitempty" gorm:"foreignKey:ClientID; constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
 }
 
