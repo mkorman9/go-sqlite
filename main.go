@@ -48,7 +48,7 @@ func main() {
 	flag.StringVar(&address, "address", "0.0.0.0:8080", "HTTP server address")
 	flag.Parse()
 
-	_ = tiny.LoadConfig()
+	tiny.LoadConfig()
 	tiny.SetupLogger()
 
 	db, err := tinysqlite.Open(dsn)
