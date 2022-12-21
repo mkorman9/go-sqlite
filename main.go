@@ -153,7 +153,8 @@ func query(db *gorm.DB) []*Client {
 
 func queryAverageAge(db *gorm.DB) float64 {
 	var avgAge float64
-	if tx := db.Raw("SELECT AVG(age) FROM clients").Scan(&avgAge); tx.Error != nil {
+	// if tx := db.Raw("SELECT AVG(age) FROM clients").Scan(&avgAge); tx.Error != nil {
+	if tx := db.Select("AVG(age)").Table("clients").Scan(&avgAge); tx.Error != nil {
 		log.Error().Err(tx.Error).Msg("failed to query average age")
 		return 0
 	}
