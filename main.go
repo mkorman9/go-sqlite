@@ -56,21 +56,18 @@ func main() {
 		log.Error().Err(err).Msg("failed to open sqlite")
 		os.Exit(1)
 	}
-	defer func() {
-		_ = db.Close()
-	}()
 
-	migrate(db.DB)
-	insertTestData(db.DB)
+	migrate(db)
+	insertTestData(db)
 
 	server := tinyhttp.NewServer(address)
 
 	server.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, query(db.DB))
+		c.JSON(http.StatusOK, query(db))
 	})
 
 	server.GET("/age/avg", func(c *gin.Context) {
-		c.JSON(http.StatusOK, queryAverageAge(db.DB))
+		c.JSON(http.StatusOK, queryAverageAge(db))
 	})
 
 	server.POST("/", func(c *gin.Context) {
@@ -84,7 +81,7 @@ func main() {
 			age = 21
 		}
 
-		c.JSON(http.StatusOK, insertClient(db.DB, fullName, age, nil))
+		c.JSON(http.StatusOK, insertClient(db, fullName, age, nil))
 	})
 
 	tiny.StartAndBlock(server)
