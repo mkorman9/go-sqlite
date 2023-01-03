@@ -10,7 +10,6 @@ import (
 	"gorm.io/gorm"
 	"net/http"
 	"os"
-	"strconv"
 )
 
 type Client struct {
@@ -33,6 +32,11 @@ type Credentials struct {
 
 func (Credentials) TableName() string {
 	return "client_credentials"
+}
+
+type ClientAddForm struct {
+	FullName string `json:"fullName" binding:"required"`
+	Age      int    `json:"age" binding:"required,gte=18"`
 }
 
 type BasicCredentials struct {
@@ -71,17 +75,13 @@ func main() {
 	})
 
 	server.POST("/", func(c *gin.Context) {
-		fullName := c.Query("fullName")
-		if fullName == "" {
-			fullName = "John Doe"
+		var form ClientAddForm
+		if err := c.ShouldBindJSON(&form); err != nil {
+			c.AbortWithStatus(400)
+			return
 		}
 
-		age, err := strconv.Atoi(c.Query("age"))
-		if err != nil || age < 18 {
-			age = 21
-		}
-
-		c.JSON(http.StatusOK, insertClient(db, fullName, age, nil))
+		c.JSON(http.StatusOK, insertClient(db, form.FullName, form.Age, nil))
 	})
 
 	tiny.StartAndBlock(server)
