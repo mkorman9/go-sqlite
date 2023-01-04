@@ -9,4 +9,4 @@ COPY --from=metadata /etc/passwd /etc/passwd
 COPY --from=metadata /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY go-sqlite .
 USER app
-CMD ["./go-sqlite"]
+ENTRYPOINT ["./go-sqlite"]
