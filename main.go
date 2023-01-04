@@ -52,8 +52,7 @@ func main() {
 	flag.StringVar(&address, "address", "0.0.0.0:8080", "HTTP server address")
 	flag.Parse()
 
-	tiny.LoadConfig()
-	tiny.SetupLogger()
+	tiny.Init()
 
 	db, err := tinysqlite.Open(dsn)
 	if err != nil {
