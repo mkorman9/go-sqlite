@@ -76,7 +76,7 @@ func main() {
 	server.POST("/", func(c *gin.Context) {
 		var form ClientAddForm
 		if err := c.ShouldBindJSON(&form); err != nil {
-			c.AbortWithStatus(400)
+			c.JSON(http.StatusBadRequest, tinyhttp.ExtractValidatorErrors(err))
 			return
 		}
 
