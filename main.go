@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 	"github.com/mkorman9/tiny"
 	"github.com/mkorman9/tiny/tinyhttp"
 	"github.com/mkorman9/tiny/tinysqlite"
@@ -65,22 +65,25 @@ func main() {
 
 	server := tinyhttp.NewServer(address)
 
-	server.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, query(db))
+	server.Get("/", func(c *fiber.Ctx) error {
+		return c.Status(http.StatusOK).
+			JSON(query(db))
 	})
 
-	server.GET("/age/avg", func(c *gin.Context) {
-		c.JSON(http.StatusOK, queryAverageAge(db))
+	server.Get("/age/avg", func(c *fiber.Ctx) error {
+		return c.Status(http.StatusOK).
+			JSON(queryAverageAge(db))
 	})
 
-	server.POST("/", func(c *gin.Context) {
+	server.Post("/", func(c *fiber.Ctx) error {
 		var form ClientAddForm
-		if err := c.ShouldBindJSON(&form); err != nil {
-			c.JSON(http.StatusBadRequest, tinyhttp.ExtractValidatorErrors(err))
-			return
+		if err := c.BodyParser(&form); err != nil {
+			return c.Status(http.StatusBadRequest).
+				JSON(tinyhttp.ExtractValidatorErrors(err))
 		}
 
-		c.JSON(http.StatusOK, insertClient(db, form.FullName, form.Age, nil))
+		return c.Status(http.StatusOK).
+			JSON(insertClient(db, form.FullName, form.Age, nil))
 	})
 
 	tiny.StartAndBlock(server)
