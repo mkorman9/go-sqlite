@@ -35,8 +35,8 @@ func (Credentials) TableName() string {
 }
 
 type ClientAddForm struct {
-	FullName string `json:"fullName" binding:"required"`
-	Age      int    `json:"age" binding:"required,gte=18"`
+	FullName string `json:"fullName" validate:"required"`
+	Age      int    `json:"age" validate:"required,gte=18"`
 }
 
 type BasicCredentials struct {
@@ -77,9 +77,9 @@ func main() {
 
 	server.Post("/", func(c *fiber.Ctx) error {
 		var form ClientAddForm
-		if err := c.BodyParser(&form); err != nil {
+		if err := tinyhttp.BindBody(c, &form); err != nil {
 			return c.Status(http.StatusBadRequest).
-				JSON(tinyhttp.ExtractValidatorErrors(err))
+				JSON(err)
 		}
 
 		return c.Status(http.StatusOK).
