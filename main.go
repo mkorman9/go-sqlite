@@ -8,7 +8,6 @@ import (
 	"github.com/mkorman9/tiny/tinysqlite"
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
-	"net/http"
 	"os"
 )
 
@@ -66,23 +65,23 @@ func main() {
 	server := tinyhttp.NewServer(address)
 
 	server.Get("/", func(c *fiber.Ctx) error {
-		return c.Status(http.StatusOK).
+		return c.Status(fiber.StatusOK).
 			JSON(query(db))
 	})
 
 	server.Get("/age/avg", func(c *fiber.Ctx) error {
-		return c.Status(http.StatusOK).
+		return c.Status(fiber.StatusOK).
 			JSON(queryAverageAge(db))
 	})
 
 	server.Post("/", func(c *fiber.Ctx) error {
 		var form ClientAddForm
 		if errs := tinyhttp.BindBody(c, &form); errs != nil {
-			return c.Status(http.StatusBadRequest).
+			return c.Status(fiber.StatusBadRequest).
 				JSON(errs)
 		}
 
-		return c.Status(http.StatusOK).
+		return c.Status(fiber.StatusOK).
 			JSON(insertClient(db, form.FullName, form.Age, nil))
 	})
 
