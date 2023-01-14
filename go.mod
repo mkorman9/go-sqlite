@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/gofiber/fiber/v2 v2.41.0
-	github.com/mkorman9/tiny v1.0.44
+	github.com/mkorman9/tiny v1.0.45
 	github.com/rs/zerolog v1.28.0
 	gorm.io/gorm v1.24.1
 )
@@ -17,6 +17,7 @@ require (
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/go-playground/validator/v10 v10.11.1 // indirect
+	github.com/goccy/go-json v0.10.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/gookit/config/v2 v2.1.8 // indirect
 	github.com/gookit/goutil v0.5.15 // indirect

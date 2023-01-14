@@ -67,7 +67,9 @@ func main() {
 
 	server.Get("/", func(c *fiber.Ctx) error {
 		return c.Status(http.StatusOK).
-			JSON(query(db))
+			JSON(fiber.Map{
+				"Hello": "World",
+			})
 	})
 
 	server.Get("/age/avg", func(c *fiber.Ctx) error {
