@@ -76,7 +76,7 @@ func main() {
 
 	server.Post("/", func(c *fiber.Ctx) error {
 		var form ClientAddForm
-		if errs := tinyhttp.BindBody(c, &form); errs != nil {
+		if errs := tinyhttp.BindBodyJSON(c, &form); errs != nil {
 			return c.Status(fiber.StatusBadRequest).
 				JSON(errs)
 		}

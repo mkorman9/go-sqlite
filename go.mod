@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/gofiber/fiber/v2 v2.41.0
-	github.com/mkorman9/tiny v1.0.47
+	github.com/mkorman9/tiny v1.0.49
 	github.com/rs/zerolog v1.28.0
 	gorm.io/gorm v1.24.1
 )
